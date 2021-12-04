@@ -3,7 +3,7 @@
 # -*- Mode: python; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
 #
 # Copyright (C)        : 2021 Headstrong Solutions
-# Author:              : Chris Morse <cgmorse@qinetiq.com>
+# Author:              : Chris Morse <chris@headstrong.solutions>
 #
 # Name                 : Sharp Display Clock
 # Description          : Sharp Display (2.7" 400X240) Clock
