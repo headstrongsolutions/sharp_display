@@ -17,7 +17,7 @@ export MYLOCATIONLONG={your long}
 It uses a font with icons for the weather icons stashed in unicode addresses, so I've used [isneezy's open-weather-fonts](https://github.com/isneezy/open-weather-icons) for this as it was the only one I could bloody well find that had references between the OpenWeatherMap's icon codes and the Unicode character addresses so I could create a simple mapping betwixt the two. 
 Massive shouts out to isneezy for this, I was dreading creating my own mapping.
 
-The line under the time is a seconds percentage bar :)
+The line under the time is a seconds percentage bar for that minute :)
 
 The Degrees C values (yes I also added a convertor helper function for the people out there that prefer Farenheit) are the 'feels like' values, cos frankly thats all I'm going to care abuot at a glance, if I want more then there is more available from this data set and I guess I'll need another screen or something. I dunno.
 
