@@ -7,6 +7,7 @@
 #
 # Name                 : Sharp Display Clock
 # Description          : Sharp Display (2.7" 400X240) Clock
+#                      : Weather font credit to https://github.com/isneezy/open-weather-icons 
 
 """SharpDisplayClock module"""
 
@@ -16,17 +17,16 @@ import busio
 import digitalio
 import arrow
 from PIL import Image, ImageDraw, ImageFont
+
 import adafruit_sharpmemorydisplay
 from datetime import datetime
 from datetime import timedelta
 from threading import Timer
 
-from threading import Timer
-
+import OpenWeather
 
 class InfiniteTimer():
     """A Timer class that does not stop, unless you want it to."""
-
     def __init__(self, seconds, target):
         self._should_continue = False
         self.is_running = False
@@ -41,7 +41,7 @@ class InfiniteTimer():
         self._start_timer()
 
     def _start_timer(self):
-        if self._should_continue: # Code could have been running when cancel was called.
+        if self._should_continue:
             self.thread = Timer(self.seconds, self._handle_target)
             self.thread.start()
 
@@ -54,14 +54,13 @@ class InfiniteTimer():
 
     def cancel(self):
         if self.thread is not None:
-            self._should_continue = False # Just in case thread is running and cancel fails.
+            self._should_continue = False
             self.thread.cancel()
         else:
             print("Timer never started or failed to initialize.")
 
 
 class SharpDisplayClock:
-    # Class 
     SCREEN_WIDTH = 400
     SCREEN_HEIGHT = 240
     BLACK = 0
@@ -69,6 +68,8 @@ class SharpDisplayClock:
     BORDER = 5
     RGB_WHITE = (255,255,255)
     RGB_BLACK = (0,0,0)
+    WEATHER_FONTSIZE = 40
+    SMALL_FONTSIZE = 15
     NORMAL_FONTSIZE = 20
     BIG_FONTSIZE = 40
     LARGE_FONTSIZE = 100
@@ -79,15 +80,17 @@ class SharpDisplayClock:
     CLOCK_TOP = -34
 
     def __init__(self, timeout_delay: float=1):
+        self.openWeather = OpenWeather.OpenWeather()
         self.spi = busio.SPI(board.SCK, MOSI=board.MOSI)
         self.scs = digitalio.DigitalInOut(board.D4)
         self.display = adafruit_sharpmemorydisplay.SharpMemoryDisplay(self.spi, self.scs, self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
         self.log_timer = None
         self.logging_interval = timeout_delay
         self.run = True
-        self.text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", self.NORMAL_FONTSIZE)
+        self.text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", self.SMALL_FONTSIZE)
         self.large_text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.NORMAL_FONTSIZE)
         self.clock_font = ImageFont.truetype("/usr/share/fonts/truetype/Gothic725/Got725Bd.ttf", self.MASSIVE_FONTSIZE)
+        self.weather_font = ImageFont.truetype("/usr/share/fonts/truetype/isneezy_WeatherIcons/isneezy_WeatherIcons.ttf", self.WEATHER_FONTSIZE)
         self.bg_color = self.BLACK
         self.font_color = self.WHITE
 
@@ -170,6 +173,33 @@ class SharpDisplayClock:
             font=self.large_text_font,
             fill=self.font_color
         )
+
+        ## Weather information from OpenWeather module
+        self.openWeather.get_report(OpenWeather.WeatherReport.Daily, from_file=False)
+        weather_left = 0
+        for report in self.openWeather.daily_reports:
+            draw.text(
+                (weather_left, 160),
+                report.weather.unicode_icon,
+                font=self.weather_font,
+                fill=self.font_color
+            )
+            draw.text(
+                (weather_left, 200),
+                report.friendly_day,
+                font=self.text_font,
+                fill=self.font_color
+            )
+            draw.text(
+                (weather_left, 220),
+                f'{round(report.feels_like.day_c)}°C',
+                font=self.text_font,
+                fill=self.font_color
+            )
+            if weather_left < 400:
+                weather_left += 60
+            else:
+                weather_left = 0
         
         self.display.image(image)
         self.display.show()
