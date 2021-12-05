@@ -10,7 +10,9 @@ It uses Open Weather Map's API, if you want to use it you'll need a API key from
 
 `
 export OPENWEATHER=<your open weather map api key> 
+
 export MYLOCATIONLAT=<your lat>
+
 export MYLOCATIONLONG=<your long>
 `
 
@@ -19,8 +21,8 @@ Massive shouts out to isneezy for this, I was dreading creating my own mapping.
 
 The line under the time is a seconds percentage bar :)
 
-The Degrees C values for the days are the 'feels like' values, cos frankly thats all I'm going to care abuot at a glance, if I want more then there is more.
+The Degrees C values (yes I also added a convertor helper function for the people out there that prefer Farenheit) are the 'feels like' values, cos frankly thats all I'm going to care abuot at a glance, if I want more then there is more available from this data set and I guess I'll need another screen or something. I dunno.
 
-Oh and Open Weather Map is only called once an hour.
+Oh and the Open Weather Map API is only called once an hour.
 
 Anything else, fire me an email at [chris@headstrong.solutions](chris@headstrong.solutions) or open an issue here.
