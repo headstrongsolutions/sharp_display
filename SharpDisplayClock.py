@@ -24,6 +24,7 @@ from datetime import timedelta
 from threading import Timer
 
 import OpenWeather
+import Jarvis
 
 class InfiniteTimer():
     """A Timer class that does not stop, unless you want it to."""
@@ -69,6 +70,7 @@ class SharpDisplayClock:
     RGB_WHITE = (255,255,255)
     RGB_BLACK = (0,0,0)
     WEATHER_FONTSIZE = 40
+    TINY_FONTSIZE = 12
     SMALL_FONTSIZE = 15
     NORMAL_FONTSIZE = 20
     BIG_FONTSIZE = 40
@@ -81,12 +83,14 @@ class SharpDisplayClock:
 
     def __init__(self, timeout_delay: float=1):
         self.openWeather = OpenWeather.OpenWeather()
+        self.jarvis = Jarvis.Jarvis()
         self.spi = busio.SPI(board.SCK, MOSI=board.MOSI)
         self.scs = digitalio.DigitalInOut(board.D4)
         self.display = adafruit_sharpmemorydisplay.SharpMemoryDisplay(self.spi, self.scs, self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
         self.log_timer = None
         self.logging_interval = timeout_delay
         self.run = True
+        self.tiny_text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", self.TINY_FONTSIZE)
         self.text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", self.SMALL_FONTSIZE)
         self.large_text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", self.NORMAL_FONTSIZE)
         self.clock_font = ImageFont.truetype("/usr/share/fonts/truetype/Gothic725/Got725Bd.ttf", self.MASSIVE_FONTSIZE)
@@ -152,6 +156,14 @@ class SharpDisplayClock:
             (self.CLOCK_LEFT + self.CLOCK_MINUTES_LEFT + 16, self.CLOCK_TOP),
             minutes,
             font=self.clock_font,
+            fill=self.font_color
+        )
+
+        latest_temp = self.jarvis.get_temps()
+        draw.text(
+            (self.SCREEN_WIDTH - 40, 0),
+            f'{latest_temp}°C',
+            font=self.tiny_text_font,
             fill=self.font_color
         )
 
