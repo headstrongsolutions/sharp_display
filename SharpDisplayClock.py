@@ -112,6 +112,7 @@ class SharpDisplayClock:
         self.weather_font = ImageFont.truetype("/usr/share/fonts/truetype/isneezy_WeatherIcons/isneezy_WeatherIcons.ttf", self.WEATHER_FONTSIZE)
         self.bg_color = self.BLACK
         self.font_color = self.WHITE
+        self.panel_top = 160 - 14
 
         self.rgb_font_color = self.RGB_WHITE
         if self.font_color == self.BLACK:
@@ -264,24 +265,24 @@ class SharpDisplayClock:
             weather_left = 0
             for report in self.openWeather.daily_reports:
                 draw.text(
-                    (weather_left, 160),
+                    (weather_left, self.panel_top),
                     report.weather.unicode_icon,
                     font=self.weather_font,
                     fill=self.font_color
                 )
                 draw.text(
-                    (weather_left, 200),
+                    (weather_left, self.panel_top + 40),
                     report.friendly_day,
                     font=self.text_font,
                     fill=self.font_color
                 )
                 draw.text(
-                    (weather_left, 220),
+                    (weather_left, self.panel_top + 60),
                     f'{round(report.feels_like.day_c)}°C',
                     font=self.text_font,
                     fill=self.font_color
                 )
-                if weather_left < 400:
+                if weather_left < self.SCREEN_WIDTH:
                     weather_left += 60
                 else:
                     weather_left = 0
@@ -298,7 +299,7 @@ class SharpDisplayClock:
 
 if __name__ == "__main__":
     try:
-        sharpDisplayClock = SharpDisplayClock(disable_weather=True, timeout_delay=1)
+        sharpDisplayClock = SharpDisplayClock(disable_weather=False, timeout_delay=1)
     except KeyboardInterrupt:
         print('Quitting SharpDisplayClock')
         try:
