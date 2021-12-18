@@ -89,8 +89,8 @@ class SharpDisplayClock:
     CLOCK_MINUTES_LEFT = 150
     CLOCK_TOP = -34
 
-    def __init__(self, disable_weather: bool=False, timeout_delay: float=1):
-        self.screen_enabled=Screens.Weather
+    def __init__(self, disable_weather: bool=False, timeout_delay: float=1, start_screen: Screens=Screens.Weather):
+        self.screen_enabled=start_screen
         self.display_weather = not disable_weather
         self.openWeather = OpenWeather.OpenWeather()
         self.jarvis = Jarvis.Jarvis()
@@ -300,7 +300,7 @@ class SharpDisplayClock:
 
 if __name__ == "__main__":
     try:
-        sharpDisplayClock = SharpDisplayClock(disable_weather=False, timeout_delay=.01)
+        sharpDisplayClock = SharpDisplayClock(disable_weather=False, timeout_delay=.01, start_screen=Screens.House)
     except KeyboardInterrupt:
         print('Quitting SharpDisplayClock')
         try:
