@@ -113,6 +113,7 @@ class SharpDisplayClock:
         self.bg_color = self.BLACK
         self.font_color = self.WHITE
         self.panel_top = 160 - 14
+        self.panel_height = 225
 
         self.rgb_font_color = self.RGB_WHITE
         if self.font_color == self.BLACK:
@@ -226,7 +227,7 @@ class SharpDisplayClock:
         self.display.show()
 
     def page_selected(self, draw):
-        default_height = 226 
+        
         page_width = self.SCREEN_WIDTH / len(Screens) 
         page_counter = 0
         for page_name in Screens:
@@ -234,11 +235,11 @@ class SharpDisplayClock:
             fill_colour = self.font_color
             font_colour = self.font_color
             if self.screen_enabled == page_name:
-                box_height = self.SCREEN_HEIGHT - default_height
+                box_height = self.SCREEN_HEIGHT - self.panel_height + 1
                 font_colour = self.bg_color
 
             draw.rectangle(
-                (page_width * page_counter, default_height, (page_width * page_counter) + 100, default_height + box_height),
+                (page_width * page_counter, self.panel_height + 1, (page_width * page_counter) + 100, self.panel_height + 1 + box_height),
                 fill=fill_colour
             )
             draw.text(
@@ -299,7 +300,7 @@ class SharpDisplayClock:
 
 if __name__ == "__main__":
     try:
-        sharpDisplayClock = SharpDisplayClock(disable_weather=False, timeout_delay=1)
+        sharpDisplayClock = SharpDisplayClock(disable_weather=False, timeout_delay=.01)
     except KeyboardInterrupt:
         print('Quitting SharpDisplayClock')
         try:
