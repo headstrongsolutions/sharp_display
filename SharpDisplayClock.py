@@ -196,7 +196,7 @@ class SharpDisplayClock:
 
         latest_temp = self.jarvis.get_temps()
         draw.text(
-            (self.SCREEN_WIDTH - 40, 0),
+            (self.SCREEN_WIDTH - 50, 0),
             f'{latest_temp}°C',
             font=self.tiny_text_font,
             fill=self.font_color
@@ -254,12 +254,17 @@ class SharpDisplayClock:
     def display_screen(self, draw):
         if self.screen_enabled is Screens.Weather:
             draw = self.draw_weather(draw)
+        elif self.screen_enabled is Screens.House:
+            draw = self.draw_house(draw)
+        elif self.screen_enabled is Screens.Alerts:
+            draw = self.draw_alerts(draw)
+        elif self.screen_enabled is Screens.Settings:
+            draw = self.draw_settings(draw)
         draw = self.page_selected(draw)  
         return draw
 
 
     def draw_weather(self, draw):
-
         if self.display_weather:
             ## Weather information from OpenWeather module
             self.openWeather.get_report(OpenWeather.WeatherReport.Daily, from_file=False)
@@ -296,6 +301,47 @@ class SharpDisplayClock:
                 font=self.large_text_font,
                 fill=self.font_color
             )
+        return draw
+
+    def draw_house(self, draw):
+        print(self.jarvis.min_temp_24h)
+        draw.text(
+            (0, self.panel_top),
+            f'{self.jarvis.min_temp_24h}',
+            font=self.text_font,
+            fill=self.font_color
+        )
+
+        draw.text(
+            (40, self.panel_top),
+            f'{self.jarvis.max_temp_24h}',
+            font=self.text_font,
+            fill=self.font_color
+        )
+
+
+        return draw
+
+    def draw_alerts(self, draw):
+        message = 'Awaiting implementation'
+        message_size_w, message_size_h = self.large_text_font.getsize(message)
+        draw.text(
+            (((self.SCREEN_WIDTH / 2) - (message_size_w / 2)), 180),
+            message,
+            font=self.large_text_font,
+            fill=self.font_color
+        )
+        return draw
+
+    def draw_settings(self, draw):
+        message = 'Awaiting implementation'
+        message_size_w, message_size_h = self.large_text_font.getsize(message)
+        draw.text(
+            (((self.SCREEN_WIDTH / 2) - (message_size_w / 2)), 180),
+            message,
+            font=self.large_text_font,
+            fill=self.font_color
+        )
         return draw
 
 if __name__ == "__main__":
