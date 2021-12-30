@@ -27,7 +27,7 @@ from InkyImpression import InkyImpression
 
 import OpenWeather
 import Jarvis
-import InkyImpression
+from inky_google_calendar import InkyImpression as InkyCalendar
 
 class InfiniteTimer():
     """A Timer class that does not stop, unless you want it to."""
@@ -89,12 +89,21 @@ class SharpDisplayClock:
     CLOCK_MINUTES_LEFT = 150
     CLOCK_TOP = -34
 
-    def __init__(self, disable_weather: bool=False, timeout_delay: float=1, start_screen: Screens=Screens.Weather):
+    def __init__(self, 
+                 disable_weather: bool=False, 
+                 timeout_delay: float=1, 
+                 start_screen: Screens=Screens.Weather,
+                 calendar_reload_time=3600,
+                 disable_calendar: bool=False
+                 ):
         self.screen_enabled=start_screen
+        self.calendar_reload_time = calendar_reload_time
         self.display_weather = not disable_weather
+        self.disable_calendar = disable_calendar
         self.openWeather = OpenWeather.OpenWeather()
         self.jarvis = Jarvis.Jarvis()
-        self.inky_impression = InkyImpression.InkyImpression(
+        self.inky_calendar = InkyCalendar()
+        self.inky_impression_buttons = InkyImpression(
             button1_function = self.button1_function, 
             button2_function = self.button2_function, 
             button3_function = self.button3_function, 
@@ -125,11 +134,12 @@ class SharpDisplayClock:
 
         self.display_dots = True
 
-        self.inky_impression.bind_button_events()
+        self.inky_impression_buttons.bind_button_events()
 
         self.clear_screen()
+        self.next_calendar_reload = datetime.now()
 
-        self.timer = InfiniteTimer(self.logging_interval, self.update_clock)
+        self.timer = InfiniteTimer(self.logging_interval, self.update)
         self.timer.start()
 
     def button1_function(self, pin):
@@ -159,6 +169,14 @@ class SharpDisplayClock:
             seconds_dec = (seconds / 60)
         length = (seconds_dec * (self.SCREEN_WIDTH / 100)) * 100
         return length
+    
+    def update(self):
+        now = datetime.now()
+        if self.next_calendar_reload < now:
+            self.inky_calendar.render_gcal_to_inky()
+            self.next_calendar_reload = now + timedelta(seconds=self.calendar_reload_time)
+            
+        self.update_clock()
 
     def update_clock(self):
         image = Image.new(self.MONO_PALETTE, (self.display.width, self.display.height), self.bg_color)
@@ -250,7 +268,6 @@ class SharpDisplayClock:
             )
             page_counter += 1
 
-
     def display_screen(self, draw):
         if self.screen_enabled is Screens.Weather:
             draw = self.draw_weather(draw)
@@ -304,22 +321,43 @@ class SharpDisplayClock:
         return draw
 
     def draw_house(self, draw):
-        print(self.jarvis.min_temp_24h)
         draw.text(
             (0, self.panel_top),
-            f'{self.jarvis.min_temp_24h}',
+            f'24h Min:',
+            font=self.text_font,
+            fill=self.font_color
+        )
+        draw.text(
+            (70, self.panel_top),
+            f'{self.jarvis.min_temp_24h}°C',
             font=self.text_font,
             fill=self.font_color
         )
 
         draw.text(
-            (40, self.panel_top),
-            f'{self.jarvis.max_temp_24h}',
+            (0, self.panel_top + 20 ),
+            f'24h Max:',
+            font=self.text_font,
+            fill=self.font_color
+        )
+        draw.text(
+            (70, self.panel_top + 20 ),
+            f'{self.jarvis.max_temp_24h}°C',
             font=self.text_font,
             fill=self.font_color
         )
 
+        draw.rectangle(
+                (130, self.panel_top + 5, 130, self.panel_top + 35),
+                fill=self.font_color
+            )
+        
+        self.draw_weather_data(draw)
 
+
+        return draw
+
+    def draw_weather_data(self, draw):
         return draw
 
     def draw_alerts(self, draw):
