@@ -2,3 +2,5 @@ __pycache__/
 service.sh
 weather_report.json
 pytest.ini
+token.json
+credentials.json
