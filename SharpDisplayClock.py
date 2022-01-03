@@ -372,19 +372,21 @@ class SharpDisplayClock:
         return draw
 
     def draw_settings(self, draw):
-        message = 'Awaiting implementation'
-        message_size_w, message_size_h = self.large_text_font.getsize(message)
         draw.text(
-            (((self.SCREEN_WIDTH / 2) - (message_size_w / 2)), 180),
-            message,
-            font=self.large_text_font,
+            (0, self.panel_top),
+            f'Calendar next update: {self.next_calendar_reload.strftime("%m/%d/%Y, %H:%M:%S")}',
+            font=self.text_font,
             fill=self.font_color
         )
         return draw
 
 if __name__ == "__main__":
     try:
-        sharpDisplayClock = SharpDisplayClock(disable_weather=False, timeout_delay=.01, start_screen=Screens.House)
+        sharpDisplayClock = SharpDisplayClock(
+		disable_weather=False, 
+		timeout_delay=.01, 
+		start_screen=Screens.House,
+		disable_calendar=True)
     except KeyboardInterrupt:
         print('Quitting SharpDisplayClock')
         try:
