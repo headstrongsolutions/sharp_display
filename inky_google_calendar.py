@@ -107,11 +107,13 @@ class InkyImpression:
                     friendly_time = event.start.strftime("%H:%M")
                     if event.end:
                         friendly_time_end = event.end.strftime("%H:%M")
-                        friendly_time = str("%s - %s" % (friendly_time, friendly_time_end))
                         self.draw.text((event_x, event_y), event.title[:13] , self.BLUE, font=self.normal_font)
-                        self.draw.text((event_x, event_y+13), friendly_time , self.GREEN, font=self.normal_font)
+                        if friendly_time != friendly_time_end:
+                            friendly_time = str("%s - %s" % (friendly_time, friendly_time_end))
+                            self.draw.text((event_x, event_y+13), friendly_time , self.GREEN, font=self.normal_font)
+                            event_y = event_y + 15
                     
-                    event_y = event_y + 30
+                    event_y = event_y + 15
                     event_count = event_count +1
 
         # draw containing box

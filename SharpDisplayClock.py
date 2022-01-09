@@ -22,6 +22,7 @@ from PIL import Image, ImageDraw, ImageFont
 import adafruit_sharpmemorydisplay
 from datetime import datetime
 from datetime import timedelta
+import time
 from threading import Timer
 from InkyImpression import InkyImpression
 
@@ -137,7 +138,8 @@ class SharpDisplayClock:
         self.inky_impression_buttons.bind_button_events()
 
         self.clear_screen()
-        self.next_calendar_reload = datetime.now()
+        self.next_calendar_reload = datetime.now() + timedelta(seconds=30)
+        #self.next_calendar_reload = datetime.now()
 
         self.timer = InfiniteTimer(self.logging_interval, self.update)
         self.timer.start()
@@ -169,13 +171,13 @@ class SharpDisplayClock:
             seconds_dec = (seconds / 60)
         length = (seconds_dec * (self.SCREEN_WIDTH / 100)) * 100
         return length
-    
+
     def update(self):
         now = datetime.now()
         if self.next_calendar_reload < now:
             self.inky_calendar.render_gcal_to_inky()
+            time.sleep(30)
             self.next_calendar_reload = now + timedelta(seconds=self.calendar_reload_time)
-            
         self.update_clock()
 
     def update_clock(self):
@@ -240,12 +242,10 @@ class SharpDisplayClock:
         )
 
         self.display_screen(draw)
-        
         self.display.image(image)
         self.display.show()
 
     def page_selected(self, draw):
-        
         page_width = self.SCREEN_WIDTH / len(Screens) 
         page_counter = 0
         for page_name in Screens:
@@ -351,7 +351,6 @@ class SharpDisplayClock:
                 (130, self.panel_top + 5, 130, self.panel_top + 35),
                 fill=self.font_color
             )
-        
         self.draw_weather_data(draw)
 
 
