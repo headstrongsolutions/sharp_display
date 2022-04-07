@@ -13,6 +13,7 @@
 
 from enum import Enum
 import os, sys
+
 import board
 import busio
 import digitalio
@@ -25,10 +26,12 @@ from datetime import timedelta
 import time
 from threading import Timer
 from InkyImpression import InkyImpression
+from typing import List
 
 import OpenWeather
 import Jarvis
 from inky_google_calendar import InkyImpression as InkyCalendar
+from CameraServer import JarvisCamera
 
 class InfiniteTimer():
     """A Timer class that does not stop, unless you want it to."""
@@ -91,12 +94,15 @@ class SharpDisplayClock:
     CLOCK_TOP = -34
 
     def __init__(self, 
+                 cameras: List[JarvisCamera],
                  disable_weather: bool=False, 
                  timeout_delay: float=1, 
                  start_screen: Screens=Screens.Weather,
                  calendar_reload_time=3600,
                  disable_calendar: bool=False
                  ):
+        self.cameras = cameras
+        self.photo = None
         self.screen_enabled=start_screen
         self.calendar_reload_time = calendar_reload_time
         self.display_weather = not disable_weather
@@ -138,7 +144,7 @@ class SharpDisplayClock:
         self.inky_impression_buttons.bind_button_events()
 
         self.clear_screen()
-        self.next_calendar_reload = datetime.now() + timedelta(seconds=30)
+        self.next_calendar_reload = datetime.now() + timedelta(seconds=15)
         #self.next_calendar_reload = datetime.now()
 
         self.timer = InfiniteTimer(self.logging_interval, self.update)
@@ -154,6 +160,7 @@ class SharpDisplayClock:
 
     def button3_function(self, pin):
         self.screen_enabled = Screens.Alerts
+        self.cameras[0].set_defaults()
         print("button 3 pressed")
 
     def button4_function(self, pin):
@@ -174,77 +181,84 @@ class SharpDisplayClock:
 
     def update(self):
         now = datetime.now()
-        if self.next_calendar_reload < now:
+        if self.disable_calendar is not True and self.next_calendar_reload < now:
             self.inky_calendar.render_gcal_to_inky()
-            time.sleep(30)
             self.next_calendar_reload = now + timedelta(seconds=self.calendar_reload_time)
-        self.update_clock()
+        bypass = False
+        if self.screen_enabled is Screens.Alerts:
+            bypass = True
+        self.update_clock(bypass)
 
-    def update_clock(self):
+    def update_clock(self, bypass=False):
         image = Image.new(self.MONO_PALETTE, (self.display.width, self.display.height), self.bg_color)
         draw = ImageDraw.Draw(image)
-        if self.display_dots:
-            draw.ellipse((self.CLOCK_MINUTES_LEFT -5 + 0, 27, self.CLOCK_MINUTES_LEFT -5 + 15, 42), fill=self.font_color, outline=self.bg_color)
-            draw.ellipse((self.CLOCK_MINUTES_LEFT -5 + 0, 67, self.CLOCK_MINUTES_LEFT -5 + 15, 82), fill=self.font_color, outline=self.bg_color)
-            self.display_dots = False
-        else:
-            self.display_dots = True
+        if not bypass:
+            if self.display_dots:
+                draw.ellipse((self.CLOCK_MINUTES_LEFT -5 + 0, 27, self.CLOCK_MINUTES_LEFT -5 + 15, 42), fill=self.font_color, outline=self.bg_color)
+                draw.ellipse((self.CLOCK_MINUTES_LEFT -5 + 0, 67, self.CLOCK_MINUTES_LEFT -5 + 15, 82), fill=self.font_color, outline=self.bg_color)
+                self.display_dots = False
+            else:
+                self.display_dots = True
 
-        current_time = datetime.now()
-        hours = f'{current_time.strftime("%-I")}'
-        minutes = f'{current_time.strftime("%M")}'
-        am_pm = 'am'
-        friendly_date = f'{current_time.strftime("%A")}, {arrow.get(current_time).format("Do")} of {current_time.strftime("%B")}, {current_time.strftime("%Y")}'
-        if current_time.strftime("%p") == "PM":
-            am_pm = 'pm'
-        hours_size_w, hours_size_h = self.clock_font.getsize(hours)
-        friendly_date_size_w, friendly_date_size_h = self.text_font.getsize(friendly_date)
+            current_time = datetime.now()
+            hours = f'{current_time.strftime("%-I")}'
+            minutes = f'{current_time.strftime("%M")}'
+            am_pm = 'am'
+            friendly_date = f'{current_time.strftime("%A")}, {arrow.get(current_time).format("Do")} of {current_time.strftime("%B")}, {current_time.strftime("%Y")}'
+            if current_time.strftime("%p") == "PM":
+                am_pm = 'pm'
+            hours_size_w, hours_size_h = self.clock_font.getsize(hours)
+            friendly_date_size_w, friendly_date_size_h = self.text_font.getsize(friendly_date)
 
-        draw.text(
-            (self.CLOCK_MINUTES_LEFT - hours_size_w, self.CLOCK_TOP),
-            hours,
-            font=self.clock_font,
-            fill=self.font_color
-        )
+            draw.text(
+                (self.CLOCK_MINUTES_LEFT - hours_size_w, self.CLOCK_TOP),
+                hours,
+                font=self.clock_font,
+                fill=self.font_color
+            )
 
-        draw.text(
-            (self.CLOCK_LEFT + self.CLOCK_MINUTES_LEFT + 16, self.CLOCK_TOP),
-            minutes,
-            font=self.clock_font,
-            fill=self.font_color
-        )
+            draw.text(
+                (self.CLOCK_LEFT + self.CLOCK_MINUTES_LEFT + 16, self.CLOCK_TOP),
+                minutes,
+                font=self.clock_font,
+                fill=self.font_color
+            )
 
-        latest_temp = self.jarvis.get_temps()
-        draw.text(
-            (self.SCREEN_WIDTH - 50, 0),
-            f'{latest_temp}°C',
-            font=self.tiny_text_font,
-            fill=self.font_color
-        )
+            latest_temp = self.jarvis.get_temps()
+            draw.text(
+                (self.SCREEN_WIDTH - 50, 0),
+                f'{latest_temp}°C',
+                font=self.tiny_text_font,
+                fill=self.font_color
+            )
 
-        draw.text(
-            (self.SCREEN_WIDTH - 40, 92),
-            am_pm,
-            font=self.text_font,
-            fill=self.font_color
-        )
+            draw.text(
+                (self.SCREEN_WIDTH - 40, 92),
+                am_pm,
+                font=self.text_font,
+                fill=self.font_color
+            )
 
-        draw.rectangle(
-            (0, 125, self.seconds_length(int(current_time.strftime('%-S'))), 127),
-            fill=self.font_color
-        )
+            draw.rectangle(
+                (0, 125, self.seconds_length(int(current_time.strftime('%-S'))), 127),
+                fill=self.font_color
+            )
 
-        draw.text(
-            (((self.SCREEN_WIDTH / 2) - (friendly_date_size_w / 2)), 130),
-            friendly_date,
-            font=self.text_font,
-            fill=self.font_color
-        )
+            draw.text(
+                (((self.SCREEN_WIDTH / 2) - (friendly_date_size_w / 2)), 130),
+                friendly_date,
+                font=self.text_font,
+                fill=self.font_color
+            )
 
+        self.update_screen(draw, image)
+
+    def update_screen(self, draw, image):
         self.display_screen(draw)
-        self.display.image(image)
-        self.display.show()
-
+        if self.screen_enabled != Screens.Alerts:
+            self.display.image(image)
+            self.display.show()
+    
     def page_selected(self, draw):
         page_width = self.SCREEN_WIDTH / len(Screens) 
         page_counter = 0
@@ -267,6 +281,7 @@ class SharpDisplayClock:
                 fill=font_colour
             )
             page_counter += 1
+
 
     def display_screen(self, draw):
         if self.screen_enabled is Screens.Weather:
@@ -353,21 +368,19 @@ class SharpDisplayClock:
             )
         self.draw_weather_data(draw)
 
-
         return draw
 
     def draw_weather_data(self, draw):
         return draw
 
     def draw_alerts(self, draw):
-        message = 'Awaiting implementation'
-        message_size_w, message_size_h = self.large_text_font.getsize(message)
-        draw.text(
-            (((self.SCREEN_WIDTH / 2) - (message_size_w / 2)), 180),
-            message,
-            font=self.large_text_font,
-            fill=self.font_color
-        )
+        bg_img = Image.new("1", (400, 240))
+        door_cam_photo_path = self.cameras[0].get_photo_bw()
+        photo = Image.open(door_cam_photo_path)
+        self.photo = bg_img.paste(photo)
+        self.display.image(bg_img)
+        self.display.show()
+        time.sleep(.1)
         return draw
 
     def draw_settings(self, draw):
@@ -381,11 +394,19 @@ class SharpDisplayClock:
 
 if __name__ == "__main__":
     try:
+        photo_dir = f"{os.getcwd()}/photos"
+        door_camera = JarvisCamera(
+            ip = "192.168.0.62", 
+            photo_dir = photo_dir, 
+            camera_name = "door cam"
+        )
         sharpDisplayClock = SharpDisplayClock(
-		disable_weather=False, 
-		timeout_delay=.01, 
-		start_screen=Screens.House,
-		disable_calendar=True)
+            disable_weather=False, 
+            timeout_delay=.01, 
+            start_screen=Screens.Weather,
+            cameras=[door_camera],
+            disable_calendar=False
+        )
     except KeyboardInterrupt:
         print('Quitting SharpDisplayClock')
         try:
