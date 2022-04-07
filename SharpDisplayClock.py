@@ -404,11 +404,11 @@ if __name__ == "__main__":
             camera_name = "door cam"
         )
         sharpDisplayClock = SharpDisplayClock(
-            disable_weather=True, 
+            disable_weather=False, 
             timeout_delay=.01, 
             start_screen=Screens.Weather,
             cameras=[door_camera],
-            disable_calendar=True
+            disable_calendar=False
         )
     except KeyboardInterrupt:
         print('Quitting SharpDisplayClock')
