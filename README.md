@@ -1,5 +1,10 @@
 # Sharp LCD Display Clock and Pimoroni Inky Impression Calendar 
 
+## Notes
+
+Can I use the tplot library to make a ascii visualised (hehe) plotted chart for temp over time?
+https://github.com/JeroenDelcour/tplot
+
 
 ## Description
 
