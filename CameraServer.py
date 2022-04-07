@@ -1,6 +1,8 @@
+from io import BytesIO
+from urllib import response
 import requests
 from PIL import Image
-
+from requests.exceptions import ConnectionError
 class JarvisCamera:
     def __init__(self, ip: str, photo_dir: str, camera_name: str):
         self.camera_name = camera_name
@@ -57,14 +59,19 @@ class JarvisCamera:
         return file_path
 
     def get_photo_bw(self):
-        file_path = self.get_photo()
-        file_path_bw = f"{self.photo_dir}snapshot_bw.jpg"
-        self.format_photo(file_path, file_path_bw, optimum_size=(400,240))
-        return file_path_bw
-
-    def format_photo(self, original_image_path, result_image_path, optimum_size):
+        im = None
         try:
-            im = Image.open(original_image_path)
+            response = requests.get(f'{self.camera_address}/capture?', verify=False, timeout=1)
+            image_data = Image.open(BytesIO(response.content))
+            im  = self.format_photo(image_data, optimum_size=(400,240))
+        except ConnectionError:
+            pass
+        except requests.ReadTimeout:
+            pass
+        return im
+
+    def format_photo(self, im, optimum_size):
+        try:
             preferred_width,preferred_height = optimum_size
             im.thumbnail((preferred_width, 400))
             actual_width, actual_height = im.size
@@ -73,12 +80,11 @@ class JarvisCamera:
             bottom = actual_height - (height_remainder / 2)
             im = im.crop((0, top, preferred_width, bottom))
             im = im.convert('1')
-            im.save(result_image_path)
         except AttributeError:
             print("Pillow failed to open the original image")
         except IOError:
             print("File saving error when creating thumbnail")
-        return result_image_path
+        return im
 
 def main():
     import os

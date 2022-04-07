@@ -375,12 +375,15 @@ class SharpDisplayClock:
 
     def draw_alerts(self, draw):
         bg_img = Image.new("1", (400, 240))
-        door_cam_photo_path = self.cameras[0].get_photo_bw()
-        photo = Image.open(door_cam_photo_path)
-        self.photo = bg_img.paste(photo)
-        self.display.image(bg_img)
+        photo = self.cameras[0].get_photo_bw()
+        if photo is not None:
+            self.photo = bg_img.paste(photo)
+            self.display.image(bg_img)
+        else:
+            sleep = 2
+            print(f"Camera returned None, wait for {sleep} seconds")
+            time.sleep(sleep)
         self.display.show()
-        time.sleep(.1)
         return draw
 
     def draw_settings(self, draw):
@@ -401,11 +404,11 @@ if __name__ == "__main__":
             camera_name = "door cam"
         )
         sharpDisplayClock = SharpDisplayClock(
-            disable_weather=False, 
+            disable_weather=True, 
             timeout_delay=.01, 
             start_screen=Screens.Weather,
             cameras=[door_camera],
-            disable_calendar=False
+            disable_calendar=True
         )
     except KeyboardInterrupt:
         print('Quitting SharpDisplayClock')
