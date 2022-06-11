@@ -399,7 +399,8 @@ if __name__ == "__main__":
     try:
         photo_dir = f"{os.getcwd()}/photos"
         door_camera = JarvisCamera(
-            ip = "192.168.0.62", 
+            # convert to envar
+            ip = "192.168.0.65", 
             photo_dir = photo_dir, 
             camera_name = "door cam"
         )
