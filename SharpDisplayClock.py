@@ -30,7 +30,7 @@ from typing import List
 
 import OpenWeather
 import Jarvis
-from inky_google_calendar import InkyImpression as InkyCalendar
+from inky_caldav_calendar import InkyImpression as InkyCalendar
 from CameraServer import JarvisCamera
 
 class InfiniteTimer():
