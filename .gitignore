@@ -4,3 +4,4 @@ weather_report.json
 pytest.ini
 token.json
 credentials.json
+venv/*
