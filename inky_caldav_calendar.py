@@ -15,12 +15,8 @@ from font_source_sans_pro import SourceSansProSemibold
 from PIL import Image, ImageDraw, ImageFont
 
 from events import Events
+from caldav_calendar import CalDav_Calendar
 
-## We'll try to use the local caldav library, not the system-installed
-sys.path.insert(0, '..')
-sys.path.insert(0, '.')
-
-import caldav
 
 class InkyImpression:
     def __init__(self):
@@ -130,6 +126,8 @@ class InkyImpression:
         self.draw.line((x, offset_y, x, offset_y+box_height), colour)
         
     def render_caldav_to_inky(self):
+        calendar_data = Caldav_Calendar()
+
         x = 1
         x_max = 600
         y = 21
@@ -137,35 +135,30 @@ class InkyImpression:
         day_count = 0
         box_width = 86
         box_height = 93
-        # this is where we collect the calendar entries
-        with caldav.DAVClient(url=url, username=username, password=password) as client:
-            my_principal = client.principal()
-            calendars = my_principal.calendars()
+        today = calendar_data.events.get_day_from_dt(datetime.now())
+        self.draw_day_headers(box_width)
+        for day in calendar_data.events.dates:
+            events = calendar_data.events.find_events_by_day(day)
 
-            today = calendar_data.events.get_day_from_dt(datetime.now())
-            self.draw_day_headers(box_width)
-            for day in calendar_data.events.dates:
-                events = calendar_data.events.find_events_by_day(day)
+            datetime_day = None
+            friendly_day = calendar_data.events.remove_year_from_friendly_date(day)
+            if day_count < 28:
+                todays_the_day = False
+                if today == day:
+                    todays_the_day = True
+                self.draw_day(x, y, box_width, box_height, friendly_day, events, todays_the_day)
+                day_count = day_count + 1
+            if x < x_max - 150:
+                x = x + box_width
+            else:
+                x = 1
+                y = y + box_height + 15
 
-                datetime_day = None
-                friendly_day = calendar_data.events.remove_year_from_friendly_date(day)
-                if day_count < 28:
-                    todays_the_day = False
-                    if today == day:
-                        todays_the_day = True
-                    self.draw_day(x, y, box_width, box_height, friendly_day, events, todays_the_day)
-                    day_count = day_count + 1
-                if x < x_max - 150:
-                    x = x + box_width
-                else:
-                    x = 1
-                    y = y + box_height + 15
+        # right and bottom edges
+        self.draw.line((598,0,598,446), self.RED)
+        self.draw.line((0,446,598,446), self.RED)
 
-            # right and bottom edges
-            self.draw.line((598,0,598,446), self.RED)
-            self.draw.line((0,446,598,446), self.RED)
-
-            self.inky.set_image(self.img, saturation=1)
-            self.inky.show()
-            # To simulate:
-            #inky.wait_for_window_close()
+        self.inky.set_image(self.img, saturation=1)
+        self.inky.show()
+        # To simulate:
+        #inky.wait_for_window_close()
