@@ -182,7 +182,7 @@ class SharpDisplayClock:
     def update(self):
         now = datetime.now()
         if self.disable_calendar is not True and self.next_calendar_reload < now:
-            self.inky_calendar.render_gcal_to_inky()
+            self.inky_calendar.render_caldav_to_inky()
             self.next_calendar_reload = now + timedelta(seconds=self.calendar_reload_time)
         bypass = False
         if self.screen_enabled is Screens.Alerts:
