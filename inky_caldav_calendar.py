@@ -126,7 +126,7 @@ class InkyImpression:
         self.draw.line((x, offset_y, x, offset_y+box_height), colour)
         
     def render_caldav_to_inky(self):
-        calendar_data = Caldav_Calendar()
+        calendar_data = CalDav_Calendar()
 
         x = 1
         x_max = 600
