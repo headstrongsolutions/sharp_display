@@ -26,6 +26,15 @@ So, E-Ink for calendar is excellent, really good use case, but I want a desk clo
 
 Non-intrusive to me means ideally not casting light, so I opted for a [Adafruit 2.7" LCD Sharp Display](https://shop.pimoroni.com/products/adafruit-sharp-memory-display-breakout-2-7-400x240-monochrome) as it has no backlight. 
 
+A little bit on where to get the calendar data from, I used Google Calendar data for a while, and that was fine but I didn't need anything more than a developers app access for it, so I had to refresh the token every week which became quite boring after a while.
+I've since installed Xandikos (notice the complete lack of link there, as I'll explain in a moment I can't really reccomend it, it works for me but only just), Xandikos serves CalDav calendars, so thats nice. 
+
+CalDav seems like a bit of a bag of nails when you get further in, not bad but not enforcey so I've got my implementation working with a couple of kludges (if when getting a event you get loads of collections of columns, mix them all into one set, _then_ look for what you care about..).
+Also, and this was _really_ fun to debug, the CalDav python library throws an absolute fit if it gets naive datetimes (without concrete locale) for it's start/ends, so if you do use this, make sure when you are creating cal appts you specify a concrete locale (London, etc). 
+Oh and all day events apparently don't even return, but I suspect that's more to do with Xandikos than anything.
+
+Still, it works so __ship it!__  
+
 ![Screen Display](Sharp_screen.png)
 
 ## Detail
