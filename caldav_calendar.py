@@ -53,7 +53,8 @@ class CalDav_Calendar:
         then = week_start + timedelta(30)
 
         events = Events(week_start, then) 
-        self.month_events = self.calendar.date_search(start=week_start, end=then)
+        #self.month_events = self.calendar.date_search(start=week_start, end=then)
+        self.month_events = self.calendar.events()
 
         for event_collection in self.month_events:
             summary = ""
@@ -65,24 +66,31 @@ class CalDav_Calendar:
                 for event_item in event_list:
                     if event_item in event:
                         event[event_item] = event_list[event_item]
-            if 'SUMMARY' in event:
+            skip = False
+            if 'SUMMARY' in event and event['SUMMARY'] != '': 
                 summary = event['SUMMARY']
-            if not summary and 'DESCRIPTION' in event:
+            if not summary and 'DESCRIPTION' in event and event['DESCRIPTION'] != '':
                 summary = event['DESCRIPTION']
-            if 'DTSTART' in event:
+            if 'DTSTART' in event and hasattr(event['DTSTART'],'dt') and event['DTSTART'].dt:
+                if event['DTSTART'].dt not in events.dates:
+                    skip = True
                 start = event['DTSTART'].dt
-            if 'DTEND' in event:
+            else:
+                print('aha!')
+            if 'DTEND' in event and hasattr(event['DTEND'],'dt') and event['DTEND'].dt:
                 end = event['DTEND'].dt
-            if 'DURATION' in event:
+            if 'DURATION' in event and event['DURATION'] != '':
                 duration = event['DURATION']
             if start and end:
                 end_dt = end
             elif start and duration: 
                 end_dt = start + duration.dt
             
-            #if start and end_dt:
-            events.add_event(start=start, end=end_dt, title=summary, description=None)
-        self.events = events
+            if summary and start and end_dt:
+                events.add_event(start=start, end=end_dt, title=summary, description=None)
+        #self.events = events.events.sort(key = start)
+        self.calendar.events = events
+        
 
     def print_events(self):
         if len(self.events.events) > 0:

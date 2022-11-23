@@ -135,13 +135,13 @@ class InkyImpression:
         day_count = 0
         box_width = 86
         box_height = 93
-        today = calendar_data.events.get_day_from_dt(datetime.now())
+        today = Events.get_day_from_dt(self = None, dt = datetime.now())
         self.draw_day_headers(box_width)
-        for day in calendar_data.events.dates:
-            events = calendar_data.events.find_events_by_day(day)
+        for day in calendar_data.calendar.events.dates:
+            events = calendar_data.calendar.events.find_events_by_day(day)
 
             datetime_day = None
-            friendly_day = calendar_data.events.remove_year_from_friendly_date(day)
+            friendly_day = calendar_data.calendar.events.remove_year_from_friendly_date(day)
             if day_count < 28:
                 todays_the_day = False
                 if today == day:

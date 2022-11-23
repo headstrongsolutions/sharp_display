@@ -408,7 +408,7 @@ if __name__ == "__main__":
             disable_weather=False, 
             timeout_delay=.01, 
             start_screen=Screens.Weather,
-            cameras=[door_camera],
+            cameras=[],
             disable_calendar=False
         )
     except KeyboardInterrupt:
