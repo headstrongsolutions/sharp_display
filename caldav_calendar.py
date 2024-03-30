@@ -1,7 +1,7 @@
 import os
 import sys
 from time import sleep
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone, timedelta, time
 from events import Events
 
 ## We'll try to use the local caldav library, not the system-installed
@@ -50,11 +50,19 @@ class CalDav_Calendar:
 
         today = datetime.today()
         week_start = today - timedelta(days=today.weekday())
-        then = week_start + timedelta(30)
+        week_start_min = midnight_today = datetime.combine(week_start, time.min)
+        then = week_start + timedelta(days=+31)
+        events = Events(week_start_min, then)
 
-        events = Events(week_start, then) 
-        #self.month_events = self.calendar.date_search(start=week_start, end=then)
-        self.month_events = self.calendar.events()
+        # start = datetime.now()
+        # end = start + timedelta(days=+21)
+
+        self.month_events = self.calendar.search(
+            start=week_start_min,
+            end=then,
+            event=True,
+            expand=True,
+        )
 
         for event_collection in self.month_events:
             summary = ""
