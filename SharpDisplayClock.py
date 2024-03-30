@@ -398,12 +398,12 @@ class SharpDisplayClock:
 if __name__ == "__main__":
     try:
         photo_dir = f"{os.getcwd()}/photos"
-        door_camera = JarvisCamera(
-            # convert to envar
-            ip = "192.168.0.65", 
-            photo_dir = photo_dir, 
-            camera_name = "door cam"
-        )
+        # door_camera = JarvisCamera(
+            # # convert to envar
+            # ip = "192.168.0.65", 
+            # photo_dir = photo_dir, 
+            # camera_name = "door cam"
+        # )
         sharpDisplayClock = SharpDisplayClock(
             disable_weather=False, 
             timeout_delay=.01, 
