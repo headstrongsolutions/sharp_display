@@ -35,10 +35,10 @@ from CameraServer import JarvisCamera
 
 class InfiniteTimer():
     """A Timer class that does not stop, unless you want it to."""
-    def __init__(self, seconds, target):
+    def __init__(self, milliseconds, target):
         self._should_continue = False
         self.is_running = False
-        self.seconds = seconds
+        self.milliseconds = milliseconds
         self.target = target
         self.thread = None
 
@@ -50,7 +50,7 @@ class InfiniteTimer():
 
     def _start_timer(self):
         if self._should_continue:
-            self.thread = Timer(self.seconds, self._handle_target)
+            self.thread = Timer(self.milliseconds/1000, self._handle_target)
             self.thread.start()
 
     def start(self):
@@ -96,14 +96,16 @@ class SharpDisplayClock:
     def __init__(self, 
                  cameras: List[JarvisCamera],
                  disable_weather: bool=False, 
-                 timeout_delay: float=1, 
+                 refresh_delay_millis: int=1000, 
                  start_screen: Screens=Screens.Weather,
                  calendar_reload_time=3600,
                  disable_calendar: bool=False
                  ):
         self.cameras = cameras
         self.photo = None
-        self.screen_enabled=start_screen
+        self.screen_enabled = start_screen
+        self.update_delay = refresh_delay_millis
+        self.last_updated = datetime.now()
         self.calendar_reload_time = calendar_reload_time
         self.display_weather = not disable_weather
         self.disable_calendar = disable_calendar
@@ -119,7 +121,7 @@ class SharpDisplayClock:
         self.scs = digitalio.DigitalInOut(board.D4)
         self.display = adafruit_sharpmemorydisplay.SharpMemoryDisplay(self.spi, self.scs, self.SCREEN_WIDTH, self.SCREEN_HEIGHT)
         self.log_timer = None
-        self.logging_interval = timeout_delay
+        self.logging_interval = refresh_delay_millis
         self.run = True
         self.tiny_text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", self.TINY_FONTSIZE)
         self.text_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf", self.SMALL_FONTSIZE)
@@ -181,13 +183,18 @@ class SharpDisplayClock:
 
     def update(self):
         now = datetime.now()
-        if self.disable_calendar is not True and self.next_calendar_reload < now:
-            self.inky_calendar.render_caldav_to_inky()
-            self.next_calendar_reload = now + timedelta(seconds=self.calendar_reload_time)
-        bypass = False
-        if self.screen_enabled is Screens.Alerts:
-            bypass = True
-        self.update_clock(bypass)
+        if now + timedelta(milliseconds=self.update_delay) > self.last_updated:
+            if self.disable_calendar is not True and self.next_calendar_reload < now:
+                self.inky_calendar.render_caldav_to_inky()
+                self.next_calendar_reload = now + timedelta(seconds=self.calendar_reload_time)
+            bypass = False
+            if self.screen_enabled is Screens.Alerts:
+                bypass = True
+
+            self.update_clock(bypass)
+        else:
+            self.last_updated = datetime.now()
+            time.sleep(self.update_delay)
 
     def update_clock(self, bypass=False):
         image = Image.new(self.MONO_PALETTE, (self.display.width, self.display.height), self.bg_color)
@@ -250,7 +257,7 @@ class SharpDisplayClock:
                 font=self.text_font,
                 fill=self.font_color
             )
-
+        self.last_update = datetime.now()
         self.update_screen(draw, image)
 
     def update_screen(self, draw, image):
@@ -406,7 +413,7 @@ if __name__ == "__main__":
         # )
         sharpDisplayClock = SharpDisplayClock(
             disable_weather=False, 
-            timeout_delay=.01, 
+            refresh_delay_millis=500, 
             start_screen=Screens.Weather,
             cameras=[],
             disable_calendar=False
