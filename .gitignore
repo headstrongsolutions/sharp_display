@@ -5,3 +5,4 @@ pytest.ini
 token.json
 credentials.json
 venv/*
+.vscode/*
