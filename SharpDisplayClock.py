@@ -110,6 +110,7 @@ class SharpDisplayClock:
         self.display_weather = not disable_weather
         self.disable_calendar = disable_calendar
         self.openWeather = OpenWeather.OpenWeather()
+        self.last_temp = ""
         self.jarvis = Jarvis.Jarvis()
         self.inky_calendar = InkyCalendar()
         self.inky_impression_buttons = InkyImpression(
@@ -147,7 +148,6 @@ class SharpDisplayClock:
 
         self.clear_screen()
         self.next_calendar_reload = datetime.now() + timedelta(seconds=15)
-        #self.next_calendar_reload = datetime.now()
 
         self.timer = InfiniteTimer(self.logging_interval, self.update)
         self.timer.start()
@@ -185,6 +185,8 @@ class SharpDisplayClock:
         now = datetime.now()
         if now + timedelta(milliseconds=self.update_delay) > self.last_updated:
             if self.disable_calendar is not True and self.next_calendar_reload < now:
+                self.openWeather.get_report(OpenWeather.WeatherReport.Daily, from_file=False)
+                self.last_temp = self.jarvis.get_temps()
                 self.inky_calendar.render_caldav_to_inky()
                 self.next_calendar_reload = now + timedelta(seconds=self.calendar_reload_time)
             bypass = False
@@ -230,11 +232,9 @@ class SharpDisplayClock:
                 font=self.clock_font,
                 fill=self.font_color
             )
-
-            latest_temp = self.jarvis.get_temps()
             draw.text(
                 (self.SCREEN_WIDTH - 50, 0),
-                f'{latest_temp}°C',
+                f'{self.last_temp}°C',
                 font=self.tiny_text_font,
                 fill=self.font_color
             )
@@ -305,8 +305,6 @@ class SharpDisplayClock:
 
     def draw_weather(self, draw):
         if self.display_weather:
-            ## Weather information from OpenWeather module
-            self.openWeather.get_report(OpenWeather.WeatherReport.Daily, from_file=False)
             weather_left = 0
             for report in self.openWeather.daily_reports:
                 draw.text(
